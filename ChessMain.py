@@ -1,3 +1,3 @@
 """
-Main driver file.
+Main driver file. Responsible for handling user input and displaying game state.
 """
