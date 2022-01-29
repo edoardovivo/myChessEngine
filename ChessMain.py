@@ -18,7 +18,8 @@ Initialize a global dictionary of images. Called exactly once in the main
 """
 def load_images():
     pieces = ["bR", "bN", "bB", "bQ", "bK", "bp", "wR", "wN", "wB", "wQ", "wK", "wp"]
-    IMAGES = {piece: p.transform.scale(p.image.load("./images/{}.png".format( piece)), (SQ_SIZE, SQ_SIZE) ) for piece in pieces}
+    for piece in pieces:
+        IMAGES[piece] = p.transform.scale(p.image.load("./images/{}.png".format( piece)), (SQ_SIZE, SQ_SIZE) )
 
 
 """
@@ -69,7 +70,11 @@ def draw_board(screen):
 Draw the pieces on the board given the game state
 '''
 def draw_pieces(screen, board):
-    pass
+    for r in range(DIMENSION):
+        for c in range(DIMENSION):
+            piece = board[r][c]
+            if piece != '--':
+                screen.blit(IMAGES[piece],p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 
 if __name__ == "__main__":
