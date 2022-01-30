@@ -2,16 +2,19 @@
 Main driver file. Responsible for handling user input and displaying game state.
 """
 
-from ChessEngine import GameState
+import ChessEngine
 import pygame as p
 import os
+
 #os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 WIDTH = HEIGHT = 512
 DIMENSION = 8
 SQ_SIZE = HEIGHT // DIMENSION
-MAX_FPS = 15
+MAX_FPS = 100
 IMAGES = {}
+
+
 
 """
 Initialize a global dictionary of images. Called exactly once in the main
@@ -31,14 +34,36 @@ def main():
     screen = p.display.set_mode((WIDTH, HEIGHT))
     clock = p.time.Clock()
     screen.fill(p.Color("white"))
-    gs = GameState()
+    gs = ChessEngine.GameState()
     load_images()
     running = True
-
+    sqSelected = ()
+    playerClicks = [] #At most two sqSelected tuples
     while running:
         for e in p.event.get():
             if e.type == 'QUIT':
                 running = False
+            elif e.type == p.MOUSEBUTTONDOWN:
+                location = p.mouse.get_pos() 
+                col = location[0] // SQ_SIZE
+                row = location[1] // SQ_SIZE
+                print(row, col)
+                if sqSelected == (row, col): #User click the same sq twice
+                    sqSelected = ()
+                    playerClicks = []
+                else:
+                    sqSelected = (row, col)
+                    playerClicks.append(sqSelected)
+            # was that the user second click? if so, move
+            if len(playerClicks) == 2:
+                move = ChessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
+                print(move.getChessNotation())
+                gs.makeMove(move)
+                sqSelected = ()
+                playerClicks = []
+
+
+
             draw_game_state(screen, gs)
             clock.tick(MAX_FPS)
             p.display.flip()
