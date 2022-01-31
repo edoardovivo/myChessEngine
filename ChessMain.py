@@ -35,6 +35,8 @@ def main():
     clock = p.time.Clock()
     screen.fill(p.Color("white"))
     gs = ChessEngine.GameState()
+    validMoves = gs.getValidMoves()
+    moveMade = False #flag variable
     load_images()
     running = True
     sqSelected = ()
@@ -43,6 +45,10 @@ def main():
         for e in p.event.get():
             if e.type == 'QUIT':
                 running = False
+            elif e.type == p.KEYDOWN:
+                if e.key == p.K_z: #undo move
+                    gs.undoMove()
+                    moveMade = True
             elif e.type == p.MOUSEBUTTONDOWN:
                 location = p.mouse.get_pos() 
                 col = location[0] // SQ_SIZE
@@ -58,9 +64,14 @@ def main():
             if len(playerClicks) == 2:
                 move = ChessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
                 print(move.getChessNotation())
-                gs.makeMove(move)
-                sqSelected = ()
-                playerClicks = []
+                if move in validMoves:
+                    gs.makeMove(move)
+                    moveMade = True
+                    sqSelected = ()
+                    playerClicks = []
+            if moveMade:
+                validMoves = gs.getValidMoves()
+                moveMade = False
 
 
 
