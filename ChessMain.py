@@ -60,18 +60,21 @@ def main():
                 else:
                     sqSelected = (row, col)
                     playerClicks.append(sqSelected)
-            # was that the user second click? if so, move
-            if len(playerClicks) == 2:
-                move = ChessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
-                print(move.getChessNotation())
-                if move in validMoves:
-                    gs.makeMove(move)
-                    moveMade = True
-                    sqSelected = ()
-                    playerClicks = []
-            if moveMade:
-                validMoves = gs.getValidMoves()
-                moveMade = False
+                # was that the user second click? if so, move
+                if len(playerClicks) == 2:
+                    move = ChessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
+                    print(move.getChessNotation())
+                    if move in validMoves:
+                        gs.makeMove(move)
+                        moveMade = True
+                        sqSelected = ()
+                        playerClicks = []
+                    else:
+                        sqSelected = ()
+                        playerClicks = []
+                    if moveMade:
+                        validMoves = gs.getValidMoves()
+                        moveMade = False
 
 
 
