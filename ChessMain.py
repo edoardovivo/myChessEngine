@@ -53,7 +53,7 @@ def main():
                 location = p.mouse.get_pos() 
                 col = location[0] // SQ_SIZE
                 row = location[1] // SQ_SIZE
-                print(row, col)
+                #print(row, col)
                 if sqSelected == (row, col): #User click the same sq twice
                     sqSelected = ()
                     playerClicks = []

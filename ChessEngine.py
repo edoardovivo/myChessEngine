@@ -14,7 +14,7 @@ class GameState():
             ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
             ["--","--","--","--","--","--","--","--"],
             ["--","--","--","--","--","--","--","--"],
-            ["--","bR","--","--","--","wB","--","--"],
+            ["--","wB","--","--","--","bR","--","--"],
             ["--","--","--","--","--","--","--","--"],
             ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
@@ -89,7 +89,7 @@ class GameState():
             if self.board[r+1][c] == '--': #1 square advance
                 
                 moves.append(Move((r,c), (r+1, c), self.board))
-                if r == 2 and self.board[r+2][c] == '--': #2 squares advance
+                if r == 1 and self.board[r+2][c] == '--': #2 squares advance
                     moves.append(Move((r,c), (r+2, c), self.board))
             if c-1 >= 0:
                 if self.board[r+1][c-1][0] == 'w': #enemy piece to capture diagonally to the left
@@ -99,40 +99,91 @@ class GameState():
                     moves.append(Move((r,c), (r+1, c+1), self.board))
 
 
+    def getRookMoveOffset(self, r, c, direction, k):
+        offsets = {
+            'east': (r, c+1+k),
+            'west': (r, c-1-k),
+            'north': (r-1-k, c),
+            'south': (r+1+k, c)
+        }
+        return offsets[direction]
+
     def getRookMoves(self, r, c, moves):
         conds_east = [self.board[r][x] == '--' for x in range(c+1,8)]
-        conds_west = [self.board[r][x] == '--' for x in range(c-1, 0, -1)]
-        for k, v in enumerate(conds_east):
-            if conds_east[k]:
-                print("Appending move ({}, {}) to ({},{})".format(r,c, r, c+1+k))
-                moves.append(Move((r,c), (r, c+1+k), self.board))
-            else:
-                if self.board[r][c+1+k][0] == self.enemyPiece[self.whiteToMove]:
-                    moves.append(Move((r,c), (r, c+1+k), self.board))
-                    break
-        #print(moves)
-        '''
-        moves_east = [ (x, Move((r,c), (r, x), self.board) ) for x in range(c+1, 8) if self.board[r][x] == '--' ]
-        if (len(moves_east) > 0):
-            last_col = moves_east[-1][0]
-            if self.board[r][last_col+1][0] == 'b':
-                moves_east.append(Move( (r,c), (r, last_col+1) ))
-        '''
+        conds_west = [self.board[r][x] == '--' for x in range(c-1, -1, -1)]
+        conds_north = [self.board[x][c] == '--' for x in range(r-1, -1, -1)]
+        conds_south = [self.board[x][c] == '--' for x in range(r+1, 8)]
+
+        conds = [conds_east, conds_west, conds_north, conds_south]
+        directions = ['east', 'west', 'north', 'south']
+        
+        for direction, cond in zip(directions, conds):
+            for k, v in enumerate(cond):
+                offset = self.getRookMoveOffset( r, c, direction, k)
+                if cond[k]:
+                    moves.append(Move((r,c), offset, self.board))
+                else:
+                    if self.board[offset[0]][offset[1]][0] == self.enemyPiece[self.whiteToMove]:
+                        moves.append(Move((r,c), offset, self.board))
+                        break
         
     
-
-
-    def getKnightMoves(self, r, c, moves):
-        pass
+    def getBishopMoveOffset(self, r, c, direction, k):
+        offsets = {
+            'ne': (r-1-k, c+1+k),
+            'nw': (r-1-k, c-1-k),
+            'se': (r+1+k, c+1+k),
+            'sw': (r+1+k, c-1-k)
+        }
+        return offsets[direction]
 
     def getBishopMoves(self, r, c, moves):
-        pass
+        conds_ne = [self.board[r-x][c+x] == '--' for x in range(1,8) if (r-x >= 0) and (c+x <= 7)]
+        conds_nw = [self.board[r-x][c-x] == '--' for x in range(1,8) if (r-x >= 0) and (c-x >= 0)]
+        conds_se = [self.board[r+x][c+x] == '--' for x in range(1,8) if (r+x <= 7) and (c+x <= 7)]
+        conds_sw = [self.board[r+x][c-x] == '--' for x in range(1, 8) if (r+x <= 7) and (c-x >= 0)]
+
+        conds = [conds_ne, conds_nw, conds_se, conds_sw]
+        directions = ['ne', 'nw', 'se', 'sw']
+        
+        for direction, cond in zip(directions, conds):
+            for k, v in enumerate(cond):
+                offset = self.getBishopMoveOffset( r, c, direction, k)
+                if cond[k]:
+                    moves.append(Move((r,c), offset, self.board))
+                else:
+                    if self.board[offset[0]][offset[1]][0] == self.enemyPiece[self.whiteToMove]:
+                        moves.append(Move((r,c), offset, self.board))
+                        break
+        
+       
+
+    def getKnightMoves(self, r, c, moves):
+        all_moves = [(r-2, c-1), (r-2, c+1), (r-1, c-2), (r-1, c+2),
+                          (r+1, c-2), (r+1, c+2), (r+2, c-1), (r+2, c+1)]
+        possible_moves = [x for x in all_moves if x[0] >= 0 and x[0] <= 7 and x[1] >= 0 and x[1] <= 7]
+        for offset in possible_moves:
+            if (self.board[offset[0]][offset[1]]) == '--':
+                moves.append(Move((r,c), offset, self.board))
+            else:
+                if self.board[offset[0]][offset[1]][0] == self.enemyPiece[self.whiteToMove]:
+                        moves.append(Move((r,c), offset, self.board))
+
+    
 
     def getQueenMoves(self, r, c, moves):
-        pass
+        self.getRookMoves(r,c,moves)
+        self.getBishopMoves(r,c,moves)
 
     def getKingMoves(self, r, c, moves):
-        pass
+        all_moves = [(r+x, c+y) for x in [-1,0,1] for y in [-1, 0, 1]]
+        possible_moves = [x for x in all_moves if x[0] >= 0 and x[0] <= 7 and x[1] >= 0 and x[1] <= 7 and (x[0], x[1]) != (r,c)]
+        for offset in possible_moves:
+            if (self.board[offset[0]][offset[1]]) == '--':
+                moves.append(Move((r,c), offset, self.board))
+            else:
+                if self.board[offset[0]][offset[1]][0] == self.enemyPiece[self.whiteToMove]:
+                        moves.append(Move((r,c), offset, self.board))
 
 class Move():
 
