@@ -62,6 +62,7 @@ def main():
                     playerClicks.append(sqSelected)
                 # was that the user second click? if so, move
                 if len(playerClicks) == 2:
+                    print(gs.whiteToMove)
                     move = ChessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
                     print(move.getChessNotation())
                     if move in validMoves:
@@ -69,6 +70,7 @@ def main():
                         moveMade = True
                         sqSelected = ()
                         playerClicks = []
+
                     else:
                         sqSelected = ()
                         playerClicks = []

@@ -14,7 +14,7 @@ class GameState():
             ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
             ["--","--","--","--","--","--","--","--"],
             ["--","--","--","--","--","--","--","--"],
-            ["--","wB","--","--","--","bR","--","--"],
+            ["--","--","--","--","--","--","--","--"],
             ["--","--","--","--","--","--","--","--"],
             ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
@@ -33,11 +33,21 @@ class GameState():
             True: 'b', #if it is white turn, then the enemy piece is black and viceversa
             False: 'w'
         }
+        self.whiteKingLocation = (7,4)
+        self.blackKingLocation = (0, 4)
+        self.checkMate = False
+        self.staleMate = False
+
+
 
     def makeMove(self, move):
         self.board[move.startRow][move.startCol] = '--'
         self.board[move.endRow][move.endCol] = move.pieceMoved
         self.moveLog.append(move)
+        if move.pieceMoved == 'wK':
+            self.whiteKingLocation = (move.endRow, move.endCol)
+        elif move.pieceMoved == 'bK':
+            self.blackKingLocation = (move.endRow, move.endCol)
         self.whiteToMove = not self.whiteToMove 
 
 
@@ -45,7 +55,11 @@ class GameState():
         if len(self.moveLog) != 0:
             move = self.moveLog.pop()
             self.board[move.startRow][move.startCol] = move.pieceMoved
-            self.board[move.endRow][move.endCol] = '--'
+            self.board[move.endRow][move.endCol] = move.pieceCaptured
+            if move.pieceMoved == 'wK':
+                self.whiteKingLocation = (move.startRow, move.startCol)
+            elif move.pieceMoved == 'bK':
+                self.blackKingLocation = (move.startRow, move.startCol)
             self.whiteToMove = not self.whiteToMove
 
 
@@ -53,7 +67,57 @@ class GameState():
     All moves considering checks
     '''
     def getValidMoves(self):
-        return self.getAllPossibleMoves()
+        '''
+        1. Generate all possible moves
+        2. Make all moves one by one
+        3. For each move, generate opponent moves
+        4. See if any one of those attacks the king
+        5. If they do, it is not a valid move   
+        '''
+        moves = self.getAllPossibleMoves()
+        
+        for i in range(len(moves)-1, -1, -1): #go backwards
+            self.makeMove(moves[i])
+            self.whiteToMove = not self.whiteToMove
+            if (self.inCheck()):
+                #print(moves[i].startRow, moves[i].startCol, moves[i].endRow, moves[i].endCol )
+                moves.remove(moves[i])
+            self.whiteToMove = not self.whiteToMove
+            self.undoMove()
+        
+        if len(moves) == 0: #Either checkmate or stalemate
+            if self.inCheck():
+                self.checkMate = True
+                print("CheckMate")
+            else:
+                self.staleMate = True
+                print("StaleMate")
+        else:
+            self.checkMate = False
+            self.staleMate = False
+
+        return moves
+
+
+    '''
+    Is the current player in check?
+    '''
+    def inCheck(self):
+        if (self.whiteToMove):
+            return self.squareUnderAttack(self.whiteKingLocation[0], self.whiteKingLocation[1])
+        else:
+            return self.squareUnderAttack(self.blackKingLocation[0], self.blackKingLocation[1])
+
+
+
+    def squareUnderAttack(self, r, c):
+        self.whiteToMove = not self.whiteToMove
+        oppMoves = self.getAllPossibleMoves()
+        self.whiteToMove = not self.whiteToMove
+        for move in oppMoves:
+            if move.endRow == r and move.endCol == c: #square is under attack
+                return True
+        return False
 
 
     '''
@@ -118,6 +182,7 @@ class GameState():
         directions = ['east', 'west', 'north', 'south']
         
         for direction, cond in zip(directions, conds):
+            #print(r,c, direction, cond)
             for k, v in enumerate(cond):
                 offset = self.getRookMoveOffset( r, c, direction, k)
                 if cond[k]:
@@ -125,7 +190,8 @@ class GameState():
                 else:
                     if self.board[offset[0]][offset[1]][0] == self.enemyPiece[self.whiteToMove]:
                         moves.append(Move((r,c), offset, self.board))
-                        break
+                    break
+                    
         
     
     def getBishopMoveOffset(self, r, c, direction, k):
@@ -154,7 +220,7 @@ class GameState():
                 else:
                     if self.board[offset[0]][offset[1]][0] == self.enemyPiece[self.whiteToMove]:
                         moves.append(Move((r,c), offset, self.board))
-                        break
+                    break
         
        
 
@@ -167,7 +233,7 @@ class GameState():
                 moves.append(Move((r,c), offset, self.board))
             else:
                 if self.board[offset[0]][offset[1]][0] == self.enemyPiece[self.whiteToMove]:
-                        moves.append(Move((r,c), offset, self.board))
+                    moves.append(Move((r,c), offset, self.board))
 
     
 
@@ -183,7 +249,7 @@ class GameState():
                 moves.append(Move((r,c), offset, self.board))
             else:
                 if self.board[offset[0]][offset[1]][0] == self.enemyPiece[self.whiteToMove]:
-                        moves.append(Move((r,c), offset, self.board))
+                    moves.append(Move((r,c), offset, self.board))
 
 class Move():
 
