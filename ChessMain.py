@@ -45,10 +45,6 @@ def main():
         for e in p.event.get():
             if e.type == 'QUIT':
                 running = False
-            elif e.type == p.KEYDOWN:
-                if e.key == p.K_z: #undo move
-                    gs.undoMove()
-                    moveMade = True
             elif e.type == p.MOUSEBUTTONDOWN:
                 location = p.mouse.get_pos() 
                 col = location[0] // SQ_SIZE
@@ -62,23 +58,39 @@ def main():
                     playerClicks.append(sqSelected)
                 # was that the user second click? if so, move
                 if len(playerClicks) == 2:
-                    print(gs.whiteToMove)
+                    
                     move = ChessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
-                    print(move.getChessNotation())
-                    if move in validMoves:
-                        gs.makeMove(move)
-                        moveMade = True
-                        sqSelected = ()
-                        playerClicks = []
+                    
+                    for i in range(len(validMoves)):
+                        if move == validMoves[i]:
+                            gs.makeMove(validMoves[i])
+                            moveMade = True
+                            print(move.getChessNotation())
+                            
+                            
+                            sqSelected = ()
+                            playerClicks = []
+                if not moveMade:
+                    playerClicks = [sqSelected]
+                if moveMade:
+                    validMoves = gs.getValidMoves()
+                    moveMade = False
+                    print("WhiteToMove: " + str(gs.whiteToMove) )
+                    print("In Check: " + str(gs.inCheck) )
+                    
+                    #else:
+                    #    sqSelected = ()
+                    #    playerClicks = []
+                    #if moveMade:
+                    #    validMoves = gs.getValidMoves()
+                    #    moveMade = False
 
-                    else:
-                        sqSelected = ()
-                        playerClicks = []
-                    if moveMade:
-                        validMoves = gs.getValidMoves()
-                        moveMade = False
-
-
+            elif e.type == p.KEYDOWN:
+                if e.key == p.K_z: #undo move
+                    gs.undoMove()
+                    moveMade = True
+            
+            
 
             draw_game_state(screen, gs)
             clock.tick(MAX_FPS)
