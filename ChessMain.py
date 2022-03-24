@@ -6,6 +6,7 @@ from matplotlib import colors
 import ChessEngine
 import pygame as p
 import os
+import math
 
 #os.environ["SDL_VIDEODRIVER"] = "dummy"
 
@@ -187,13 +188,16 @@ Animating of the pieces
 '''
 def animateMove(move, screen, board, clock):
     global colors
-    coords = [] #list of coordinates that the animation will move through
-    dR = move.endRow - move.startRow
-    dC = move.endCol - move.startCol
-    framesPerSquare = 10 #frames to move one square
-    frameCount = (abs(dR) + abs(dC))*framesPerSquare
+    animationTime = 0.2 #seconds
+    clockTick = 100
+    DeltaR = move.endRow - move.startRow
+    DeltaC = move.endCol - move.startCol
+    
+    frameCount = int(math.ceil(clockTick*animationTime))
+    frameFracR = DeltaR/frameCount
+    frameFracC = DeltaC/frameCount
     for frame in range(frameCount+1):
-        r,c = (move.startRow + dR*frame/frameCount, move.startCol + dC*frame/frameCount)
+        r,c = (move.startRow + frame*frameFracR, move.startCol + frame*frameFracC)
         draw_board(screen)
         draw_pieces(screen, board)
         #erase piece moved from ending square
@@ -206,7 +210,7 @@ def animateMove(move, screen, board, clock):
         #draw the moving piece
         screen.blit(IMAGES[move.pieceMoved], p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
         p.display.flip()
-        clock.tick(60)
+        clock.tick(clockTick)
 
 
 def drawText(screen, text):
