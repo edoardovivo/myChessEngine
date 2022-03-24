@@ -64,22 +64,22 @@ def main():
                         sqSelected = (row, col)
                         playerClicks.append(sqSelected)
                     # was that the user second click? if so, move
-                    if len(playerClicks) == 2:
-                        
-                        move = ChessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
-                        
-                        for i in range(len(validMoves)):
-                            if move == validMoves[i]:
-                                gs.makeMove(validMoves[i])
-                                moveMade = True
-                                print(move.getChessNotation())
-                                
-                                
-                                sqSelected = ()
-                                playerClicks = []
-                                animate = True
-                    if not moveMade:
-                        playerClicks = [sqSelected]
+                        if len(playerClicks) == 2:
+                            
+                            move = ChessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
+                            
+                            for i in range(len(validMoves)):
+                                if move == validMoves[i]:
+                                    gs.makeMove(validMoves[i])
+                                    moveMade = True
+                                    print(move.getChessNotation())
+                                    
+                                    
+                                    sqSelected = ()
+                                    playerClicks = []
+                                    animate = True
+                        if not moveMade:
+                            playerClicks = [sqSelected]
                 
             elif e.type == p.KEYDOWN:
                 if e.key == p.K_z: #undo move
@@ -189,13 +189,18 @@ Animating of the pieces
 def animateMove(move, screen, board, clock):
     global colors
     animationTime = 0.2 #seconds
-    clockTick = 100
+    frameCount = 50
+    
     DeltaR = move.endRow - move.startRow
     DeltaC = move.endCol - move.startCol
     
-    frameCount = int(math.ceil(clockTick*animationTime))
+    #frameCount = int(math.ceil(clockTick*animationTime))
+    clockTick = frameCount/animationTime
     frameFracR = DeltaR/frameCount
     frameFracC = DeltaC/frameCount
+
+    
+    
     for frame in range(frameCount+1):
         r,c = (move.startRow + frame*frameFracR, move.startCol + frame*frameFracC)
         draw_board(screen)
