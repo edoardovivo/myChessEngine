@@ -3,7 +3,7 @@ Main driver file. Responsible for handling user input and displaying game state.
 """
 
 from matplotlib import colors
-import ChessEngine
+import ChessEngine, ChessAI
 import pygame as p
 import os
 import math
@@ -47,12 +47,17 @@ def main():
     playerClicks = [] #At most two sqSelected tuples
     animate = False
     gameOver = False
+    playerOne = True #If human plays white then True. If AI playing, then false
+    playerTwo = True #Same as above but for black
     while running:
+
+        humanTurn = (gs.whiteToMove and playerOne) or (not gs.whiteToMove and playerTwo)
+
         for e in p.event.get():
             if e.type == 'QUIT':
                 running = False
             elif e.type == p.MOUSEBUTTONDOWN:
-                if not gameOver:
+                if not gameOver and humanTurn:
                     location = p.mouse.get_pos() 
                     col = location[0] // SQ_SIZE
                     row = location[1] // SQ_SIZE
@@ -95,7 +100,17 @@ def main():
                     animate = False
                     gameOver = False
 
-            
+
+        #AI move finder logic
+        if not gameOver and not humanTurn:
+            AIMove = ChessAI.findBestMove(gs, validMoves)
+            if (AIMove is None):
+                AIMove = ChessAI.findRandomMove(validMoves)
+            gs.makeMove(AIMove)
+            moveMade = True
+            animate=True
+
+
         if moveMade:
             if animate:
                 animateMove(gs.moveLog[-1], screen, gs.board, clock)

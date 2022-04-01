@@ -191,6 +191,12 @@ class GameState():
             self.checkMate = False
             self.staleMate = False
         '''
+
+
+
+        ### TODO: If in check, it does not allow to capture the piece that is checking!!
+
+
         moves = []
         self.inCheck, self.pins, self.checks = self.checkForPinsAndChecks()
         print(self.inCheck)
@@ -207,7 +213,7 @@ class GameState():
                 check = self.checks[0]
                 checkRow = check[0]
                 checkCol = check[1]
-                pieceChecking = self.board[checkRow][checkCol]
+                pieceChecking = self.board[checkRow][checkCol][1]
                 validSquares = []
                 if pieceChecking == 'N':
                     validSquares = [(checkRow, checkCol)]
@@ -218,10 +224,13 @@ class GameState():
                         if validSquare[0] == checkRow and validSquare[1] == checkCol: #you get to the piece that checks
                             break
                 # get rid of moves that do not deal with the check
+                #print(moves)
+                #print(validSquares)
                 for i in range(len(moves)-1, -1, -1):
                     if moves[i].pieceMoved[1] != 'K': #Move does not move the king so it must block or capture
                         if not (moves[i].endRow, moves[i].endCol) in validSquares:
                             moves.remove(moves[i])
+                print(moves)
             else: #Double check, king has to move
                 self.getKingMoves(kingRow, kingCol, moves)
         else: #not in check so all moves are fine
@@ -441,9 +450,16 @@ class GameState():
 
         conds = [conds_east, conds_west, conds_north, conds_south]
         directions = ['east', 'west', 'north', 'south']
+        directions_dict = {
+            'east': (0, 1),
+            'west': (0, -1),
+            'north': (1, 0),
+            'south': (-1, 0)
+        }
         
         for direction, cond in zip(directions, conds):
             #print(r,c, direction, cond)
+            d = directions_dict[direction]
             for k, v in enumerate(cond):
                 offset = self.getRookMoveOffset( r, c, direction, k)
                 if cond[k]:
@@ -485,8 +501,16 @@ class GameState():
 
         conds = [conds_ne, conds_nw, conds_se, conds_sw]
         directions = ['ne', 'nw', 'se', 'sw']
-        
+        directions_dict = {
+            'ne': (1, 1),
+            'nw': (1, -1),
+            'se': (-1, 1),
+            'sw': (-1, -1)
+        }
+
+
         for direction, cond in zip(directions, conds):
+            d = directions_dict[direction]
             for k, v in enumerate(cond):
                 offset = self.getBishopMoveOffset( r, c, direction, k)
                 if cond[k]:
