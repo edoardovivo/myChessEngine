@@ -48,7 +48,7 @@ def main():
     animate = False
     gameOver = False
     playerOne = True #If human plays white then True. If AI playing, then false
-    playerTwo = True #Same as above but for black
+    playerTwo = False #Same as above but for black
     while running:
 
         humanTurn = (gs.whiteToMove and playerOne) or (not gs.whiteToMove and playerTwo)

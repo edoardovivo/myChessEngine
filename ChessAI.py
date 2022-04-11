@@ -1,4 +1,5 @@
 import random
+import numpy as np
 
 pieceScores = {
     "K": 0,
@@ -11,6 +12,8 @@ pieceScores = {
 
 CHECKMATE = 1000
 STALEMATE = 0
+DEPTH = 4
+nextMove = None
 
 
 def findRandomMove(validMoves):
@@ -19,6 +22,7 @@ def findRandomMove(validMoves):
 
 
 def findBestMove(gs, validMoves):
+    '''
     turnMultiplier = 1 if gs.whiteToMove else -1
     opponentMinMaxScore = CHECKMATE
     bestPlayerMove = None
@@ -40,10 +44,59 @@ def findBestMove(gs, validMoves):
             opponentMinMaxScore = opponentMaxScore
             bestPlayerMove = playerMove
         gs.undoMove()
+    '''
+    
+    maximizingPlayer = gs.whiteToMove
+    random.shuffle(validMoves)
+    bestScore = minimax(gs, validMoves, DEPTH, -np.inf, np.inf, maximizingPlayer)
 
     
     
-    return bestPlayerMove
+    return nextMove
+
+
+'''
+Minimax algorithm
+'''
+def minimax(gs, validMoves, depth, alpha, beta, maximizingPlayer):
+    global nextMove
+    if depth == 0:
+        return scoreMaterial(gs.board)
+
+    if maximizingPlayer:
+        maxEval = -np.inf
+        for playerMove in validMoves: #for each child of position
+            gs.makeMove(playerMove)
+            opponentsMoves = gs.getValidMoves()
+            random.shuffle(opponentsMoves)
+            evaluation = minimax(gs, opponentsMoves, depth - 1,alpha, beta, False)
+            alpha = max(alpha, evaluation)
+            if evaluation > maxEval:
+                maxEval = evaluation
+                if depth == DEPTH:
+                    nextMove = playerMove
+            gs.undoMove()
+            if beta <= alpha:
+                break
+            
+        return maxEval
+    else:
+        minEval = +np.inf
+        for playerMove in validMoves: #for each child of position
+            gs.makeMove(playerMove)
+            opponentsMoves = gs.getValidMoves()
+            random.shuffle(opponentsMoves)
+            evaluation = minimax(gs, opponentsMoves, depth - 1, alpha, beta, True)
+            beta = min(beta, evaluation)
+            if evaluation < minEval:
+                minEval = evaluation
+                if depth == DEPTH:
+                    nextMove = playerMove
+            gs.undoMove()
+            if beta <= alpha:
+                break
+            
+        return minEval
 
 
 
