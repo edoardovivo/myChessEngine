@@ -7,6 +7,7 @@ import ChessEngine, ChessAI
 import pygame as p
 import os
 import math
+from multiprocessing import Process, Queue
 
 #os.environ["SDL_VIDEODRIVER"] = "dummy"
 
@@ -51,7 +52,10 @@ def main():
     animate = False
     gameOver = False
     playerOne = True #If human plays white then True. If AI playing, then false
-    playerTwo = True #Same as above but for black
+    playerTwo = False #Same as above but for black
+    AIThinking = False
+    moveFinderProcess = None
+    moveUndone = False
     while running:
 
         humanTurn = (gs.whiteToMove and playerOne) or (not gs.whiteToMove and playerTwo)
@@ -60,7 +64,7 @@ def main():
             if e.type == 'QUIT':
                 running = False
             elif e.type == p.MOUSEBUTTONDOWN:
-                if not gameOver and humanTurn:
+                if not gameOver:
                     location = p.mouse.get_pos() 
                     col = location[0] // SQ_SIZE
                     row = location[1] // SQ_SIZE
@@ -72,7 +76,7 @@ def main():
                         sqSelected = (row, col)
                         playerClicks.append(sqSelected)
                     # was that the user second click? if so, move
-                        if len(playerClicks) == 2:
+                        if len(playerClicks) == 2 and humanTurn:
                             
                             move = ChessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
                             
@@ -80,7 +84,7 @@ def main():
                                 if move == validMoves[i]:
                                     gs.makeMove(validMoves[i])
                                     moveMade = True
-                                    print(move.getChessNotation())
+                                    
                                     
                                     
                                     sqSelected = ()
@@ -94,6 +98,10 @@ def main():
                     gs.undoMove()
                     moveMade = True
                     animate = False
+                    if AIThinking:
+                        moveFinderProcess.terminate()
+                        AIThinking = False
+                    moveUndone = True
                 if e.key == p.K_r: #reset game
                     gs = ChessEngine.GameState()
                     validMoves = gs.getValidMoves()
@@ -105,13 +113,21 @@ def main():
 
 
         #AI move finder logic
-        if not gameOver and not humanTurn:
-            AIMove = ChessAI.findBestMove(gs, validMoves)
-            if (AIMove is None):
-                AIMove = ChessAI.findRandomMove(validMoves)
-            gs.makeMove(AIMove)
-            moveMade = True
-            animate=True
+        if not gameOver and not humanTurn and not moveUndone:
+            if not AIThinking:
+                AIThinking = True
+                returnQueue = Queue() #used to pass data between threads
+                moveFinderProcess = Process(target=ChessAI.findBestMove, args=(gs, validMoves, returnQueue))
+                moveFinderProcess.start()
+                #AIMove = ChessAI.findBestMove(gs, validMoves)
+            if not moveFinderProcess.is_alive():
+                AIMove = returnQueue.get()
+                if (AIMove is None):
+                    AIMove = ChessAI.findRandomMove(validMoves)
+                gs.makeMove(AIMove)
+                moveMade = True
+                animate=True
+                AIThinking = False
 
 
         if moveMade:
@@ -119,8 +135,8 @@ def main():
                 animateMove(gs.moveLog[-1], screen, gs.board, clock)
             validMoves = gs.getValidMoves()
             moveMade = False
-            print("WhiteToMove: " + str(gs.whiteToMove) )
-            print("In Check: " + str(gs.inCheck) )
+            #print("WhiteToMove: " + str(gs.whiteToMove) )
+            #print("In Check: " + str(gs.inCheck) )
                 
                 #else:
                 #    sqSelected = ()
@@ -277,7 +293,7 @@ def animateMove(move, screen, board, clock):
 def drawEndGameText(screen, text):
     font = p.font.SysFont('Helvitica', 32, True, False)
     textObject = font.render(text, 0, p.Color('Gray'))
-    textLocation = p.Rect(0, 0, WIDTH, HEIGHT).move(WIDTH/2 - textObject.get_width()/2, HEIGHT/2 - textObject.get_height()/2)
+    textLocation = p.Rect(0, 0, BOARD_WIDTH, BOARD_HEIGHT).move(BOARD_WIDTH/2 - textObject.get_width()/2, BOARD_HEIGHT/2 - textObject.get_height()/2)
     screen.blit(textObject, textLocation)
     textObject = font.render(text, 0, p.Color('Black'))
     screen.blit(textObject, textLocation.move(2,2))

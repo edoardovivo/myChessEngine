@@ -10,6 +10,86 @@ pieceScores = {
     "p": 1,
 }
 
+
+knightScores = [[-50,-40,-30,-30,-30,-30,-40,-50],
+[-40,-20,  0,  0,  0,  0,-20,-40],
+[-30,  0, 10, 15, 15, 10,  0,-30],
+[-30,  5, 15, 20, 20, 15,  5,-30],
+[-30,  0, 15, 20, 20, 15,  0,-30],
+[-30,  5, 10, 15, 15, 10,  5,-30],
+[-40,-20,  0,  5,  5,  0,-20,-40],
+[-50,-40,-30,-30,-30,-30,-40,-50]]
+
+bishopScores = [[-20,-10,-10,-10,-10,-10,-10,-20],
+[-10,  0,  0,  0,  0,  0,  0,-10],
+[-10,  0,  5, 10, 10,  5,  0,-10,],
+[-10,  5,  5, 10, 10,  5,  5,-10],
+[-10,  0, 10, 10, 10, 10,  0,-10],
+[-10, 10, 10, 10, 10, 10, 10,-10],
+[-10,  5,  0,  0,  0,  0,  5,-10],
+[-20,-10,-10,-10,-10,-10,-10,-20]]
+
+rookScores = [[0,  0,  0,  0,  0,  0,  0,  0],
+  [5, 10, 10, 10, 10, 10, 10,  5],
+ [-5,  0,  0,  0,  0,  0,  0, -5],
+ [-5,  0,  0,  0,  0,  0,  0, -5],
+ [-5,  0,  0,  0,  0,  0,  0, -5],
+ [-5,  0,  0,  0,  0,  0,  0, -5],
+ [-5,  0,  0,  0,  0,  0,  0, -5],
+  [0,  0,  0,  5,  5,  0,  0,  0]]
+
+
+queenScores = [
+[-20,-10,-10, -5, -5,-10,-10,-20],
+[-10,  0,  0,  0,  0,  0,  0,-10],
+[-10,  0,  5,  5,  5,  5,  0,-10],
+[ -5,  0,  5,  5,  5,  5,  0, -5],
+[  0,  0,  5,  5,  5,  5,  0, -5],
+[-10,  5,  5,  5,  5,  5,  0,-10],
+[-10,  0,  5,  0,  0,  0,  0,-10],
+[-20,-10,-10, -5, -5,-10,-10,-20]]
+
+kingScores = [
+    [-30,-40,-40,-50,-50,-40,-40,-30],
+[-30,-40,-40,-50,-50,-40,-40,-30],
+[-30,-40,-40,-50,-50,-40,-40,-30],
+[-30,-40,-40,-50,-50,-40,-40,-30],
+[-20,-30,-30,-40,-40,-30,-30,-20],
+[-10,-20,-20,-20,-20,-20,-20,-10],
+[ 20, 20,  0,  0,  0,  0, 20, 20],
+[ 20, 30, 10,  0,  0, 10, 30, 20]
+]
+
+whitePawnScores = [[50, 50, 50, 50, 50, 50, 50, 50],
+[50, 50, 50, 50, 50, 50, 50, 50],
+[10, 10, 20, 30, 30, 20, 10, 10],
+[ 5,  5, 10, 25, 25, 10,  5,  5],
+[ 0,  0,  0, 20, 20,  0,  0,  0],
+[ 5, -5,-10,  0,  0,-10, -5,  5],
+[ 5, 10, 10,-20,-20, 10, 10,  5],
+ [0,  0,  0,  0,  0,  0,  0,  0]]
+
+blackPawnScores = [[ 0,  0,  0,  0,  0,  0,  0,  0],
+[ 5, 10, 10,-20,-20, 10, 10,  5],
+[ 5, -5,-10,  0,  0,-10, -5,  5],
+[ 0,  0,  0, 20, 20,  0,  0,  0],
+[ 5,  5, 10, 25, 25, 10,  5,  5],
+[10, 10, 20, 30, 30, 20, 10, 10],
+[50, 50, 50, 50, 50, 50, 50, 50],
+ [50, 50, 50, 50, 50, 50, 50, 50]]
+
+
+
+piecePositionScores = {
+    "N": knightScores,
+    "B": bishopScores,
+    "R": rookScores,
+    "Q": queenScores,
+    "bp": blackPawnScores,
+    "wp": whitePawnScores,
+    "K": kingScores
+}
+
 CHECKMATE = 1000
 STALEMATE = 0
 DEPTH = 4
@@ -21,7 +101,8 @@ def findRandomMove(validMoves):
     return validMoves[i]
 
 
-def findBestMove(gs, validMoves):
+def findBestMove(gs, validMoves, returnQueue):
+    global nextMove
     '''
     turnMultiplier = 1 if gs.whiteToMove else -1
     opponentMinMaxScore = CHECKMATE
@@ -52,7 +133,7 @@ def findBestMove(gs, validMoves):
 
     
     
-    return nextMove
+    returnQueue.put( nextMove)
 
 
 '''
@@ -61,7 +142,7 @@ Minimax algorithm
 def minimax(gs, validMoves, depth, alpha, beta, maximizingPlayer):
     global nextMove
     if depth == 0:
-        return scoreMaterial(gs.board)
+        return score(gs)
 
     if maximizingPlayer:
         maxEval = -np.inf
@@ -103,14 +184,26 @@ def minimax(gs, validMoves, depth, alpha, beta, maximizingPlayer):
 '''
 Score the game state based on material
 '''
-def scoreMaterial(board):
+def score(gs):
+    
     score = 0
-    for row in board:
-        for square in row:
-            if square[0] == 'w':
-                score += pieceScores[square[1]]
-            elif square[0] =='b':
-                score -= pieceScores[square[1]]
+    weight = 1./50
+    for row in range(len(gs.board)):
+        for col in range(len(gs.board[row])):
+            square = gs.board[row][col]
+            
+            if square != '--':
+                #score it positionally
+                piecePositionScore = 0
+                if square[1] == 'p':
+                    piecePositionScore = piecePositionScores[square][row][col]
+                else:
+                    piecePositionScore = piecePositionScores[square[1]][row][col]
+                
+                if square[0] == 'w':
+                    score += pieceScores[square[1]] + weight * piecePositionScore 
+                elif square[0] =='b':
+                    score -= pieceScores[square[1]] + weight * piecePositionScore 
     return score
 
 

@@ -21,6 +21,16 @@ class GameState():
             ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
         ]
+        #self.board = [
+        #    ["bR", "bN", "bB", "--", "bK", "bB", "bN", "bR"],
+        #    ["bp", "bp", "bp", "--", "bp", "--", "--", "bp"],
+        #    ["--","--","--","--","--","--","bp","--"],
+        #    ["--","--","bQ","--","wp","--","wK","--"],
+        #    ["--","--","--","bp","--","--","--","--"],
+        #    ["--","--","--","--","--","--","--","--"],
+        #    ["wp", "wp", "wp", "wp", "wp", "--", "wp", "wp"],
+        #    ["wR", "wN", "wB", "wQ", "--", "wB", "wN", "wR"]
+        #]
         self.whiteToMove = True
         self.moveLog = []
         self.moveFunctions = {
@@ -225,7 +235,7 @@ class GameState():
 
         moves = []
         self.inCheck, self.pins, self.checks = self.checkForPinsAndChecks()
-        print(self.inCheck)
+        #print(self.inCheck)
 
         if self.whiteToMove:
             kingRow = self.whiteKingLocation[0]
@@ -256,7 +266,7 @@ class GameState():
                     if moves[i].pieceMoved[1] != 'K': #Move does not move the king so it must block or capture
                         if not (moves[i].endRow, moves[i].endCol) in validSquares:
                             moves.remove(moves[i])
-                print(moves)
+                #print(moves)
             else: #Double check, king has to move
                 self.getKingMoves(kingRow, kingCol, moves)
         else: #not in check so all moves are fine
@@ -266,10 +276,10 @@ class GameState():
         if len(moves) == 0: #Either checkmate or stalemate
             if self.inCheck:
                 self.checkMate = True
-                print("CheckMate")
+                #print("CheckMate")
             else:
                 self.staleMate = True
-                print("StaleMate")
+                #print("StaleMate")
         else:
             self.checkMate = False
             self.staleMate = False
@@ -412,9 +422,11 @@ class GameState():
                 pinDirection = (self.pins[i][2],self.pins[i][3])
                 self.pins.remove(self.pins[i])
                 break
-
+        
+        #TODO: Weird bug when en-passant is not possible because there is a pin
 
         if self.whiteToMove:
+            kingRow, kingCol = self.whiteKingLocation
             if self.board[r-1][c] == '--': #1 square advance
                 if not piecePinned or pinDirection == (-1, 0):
                     moves.append(Move((r,c), (r-1, c), self.board))
@@ -431,6 +443,7 @@ class GameState():
                     if not piecePinned or pinDirection == (-1, 1):
                         moves.append(Move((r,c), (r-1, c+1), self.board, isEnpassantMove))
         else: #black pawn moves
+            kingRow, kingCol = self.blackKingLocation
             if self.board[r+1][c] == '--': #1 square advance
                 if not piecePinned or pinDirection == (1, 0):
                     moves.append(Move((r,c), (r+1, c), self.board))
