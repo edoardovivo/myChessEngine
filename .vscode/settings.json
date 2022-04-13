@@ -1,0 +1,10 @@
+{
+    "databricks.connection.default.apiRootUrl": "https://adb-7543713746609737.17.azuredatabricks.net/",
+    "databricks.connection.default.displayName": "Databricks-RM",
+    "databricks.connection.default.localSyncFolder": "/media/edoardo/Data9/Documents/Databricks-RM",
+    "databricks.lastActiveConnection": "Databricks-RM",
+    "databricks.connection.default.personalAccessTokenSecure": {
+        "keyTarSettingName": "Databricks-RM-API-Token"
+    },
+    "jupyter.jupyterServerType": "local"
+}
